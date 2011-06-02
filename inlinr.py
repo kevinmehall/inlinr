@@ -1,3 +1,10 @@
+#!/usr/bin/python
+
+# inlinr - embed all linked resources into an HTML page
+# (C) 2011 Kevin Mehall <km@kevinmehall.net>
+# Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+# usage: inlinr.py <url or filename> <destination file>
+
 from lxml.html import parse, tostring
 import re
 from urlparse import urlparse, urljoin
@@ -9,6 +16,10 @@ def readurl(link, baseurl=None):
 	return urllib.urlopen(link).read()
 
 def inline_html(url):
+	"""
+	Returns a version of the page at url/filename `url` with linked resources
+	replaced by embeds
+	"""
 	tree = parse(urllib.urlopen(url))
 
 	for element, attribute, link, pos in tree.getroot().iterlinks():
