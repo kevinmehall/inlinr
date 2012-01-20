@@ -7,13 +7,28 @@
 
 from lxml.html import parse, tostring
 from urlparse import urljoin
+import re
+import base64
 import urllib
 
-def readurl(link, baseurl=None):
+def readurl(link, baseurl=None, binary=False):
 	print link
 	if baseurl:
 		link = urljoin(baseurl, link)
-	return urllib.urlopen(link).read().decode('utf8')
+	d = urllib.urlopen(link).read()
+	if not binary:
+		d = d.decode('utf8')
+	return d
+	
+css_re = re.compile('''url\('(.+)'\)''')
+def inline_css(link, parenturl):
+	data = readurl(link, parenturl)
+	
+	def replace(match):
+		d = readurl(match.group(1), parenturl, True) #TODO: use CSS basename
+		return unicode("url('data:image/png;base64,"+base64.b64encode(d)+"')") #TODO: content-type
+	
+	return css_re.sub(replace, data)
 
 def inline_html(url):
 	"""
@@ -31,7 +46,7 @@ def inline_html(url):
 		elif element.tag == 'link' and element.attrib['rel']=='stylesheet':
 			element.clear()
 			element.tag = 'style'
-			element.text = readurl(link, url)
+			element.text = inline_css(link, url)
 		elif element.tag == 'a':
 			pass
 		else:
