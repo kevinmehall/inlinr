@@ -6,14 +6,14 @@
 # usage: inlinr.py <url or filename> <destination file>
 
 from lxml.html import parse, tostring
-import re
-from urlparse import urlparse, urljoin
+from urlparse import urljoin
 import urllib
 
 def readurl(link, baseurl=None):
+	print link
 	if baseurl:
 		link = urljoin(baseurl, link)
-	return urllib.urlopen(link).read()
+	return urllib.urlopen(link).read().decode('utf8')
 
 def inline_html(url):
 	"""
@@ -23,6 +23,8 @@ def inline_html(url):
 	tree = parse(urllib.urlopen(url))
 
 	for element, attribute, link, pos in tree.getroot().iterlinks():
+		if '://' in link:
+			continue
 		if element.tag == 'script':
 			del element.attrib['src']
 			element.text = readurl(link, url)
@@ -30,6 +32,8 @@ def inline_html(url):
 			element.clear()
 			element.tag = 'style'
 			element.text = readurl(link, url)
+		elif element.tag == 'a':
+			pass
 		else:
 			print "Warning: don't know how to handle link in %s: %s"%(element.tag, link)
 
